@@ -22,14 +22,11 @@ import {
   Receipt, 
   Sparkles,
   Users,
-  Star,
-  DollarSign,
-  ArrowDownLeft,
-  ArrowUpRight
+  Star
 } from 'lucide-react';
 
 // ==========================================
-// 1. ARCHITECTURE SCHEMAS & INTERFACES
+// 1. EXTENDED PRODUCTION ARCHITECTURE TYPES
 // ==========================================
 export interface Trade {
   id: string;
@@ -72,7 +69,7 @@ export interface MerchantProfile {
   notes: string;
 }
 
-const DB_NAME = 'P2P_GodMode_Ecosystem_v4';
+const DB_NAME = 'P2X_Infinite_Custom_OS_DB_v4';
 const DB_VERSION = 4;
 
 const initDB = (): Promise<IDBDatabase> => {
@@ -92,7 +89,6 @@ const initDB = (): Promise<IDBDatabase> => {
   });
 };
 
-// Database CRUD Operations Stack
 const dbSaveTrade = async (trade: Trade): Promise<void> => {
   const db = await initDB();
   return new Promise((resolve, reject) => {
@@ -176,7 +172,7 @@ const dbWipeAllData = async (): Promise<void> => {
 };
 
 // ==========================================
-// 2. TRANSLATION MATRIX SCHEMA (i18n)
+// 2. MULTILINGUAL TRANSLATION ENGINE MATRIX
 // ==========================================
 interface TranslationSchema {
   dashboard: string; arbitrage: string; trades: string; settings: string;
@@ -198,7 +194,7 @@ const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
     dashboard: "Command Center", arbitrage: "Arbitrage Lab", trades: "Custom Ledger", settings: "System Core",
     total_portfolio: "Consolidated Asset Pool Value", today_profit: "Realized Net Yield Alpha", efficiency: "Success Velocity",
     liquidity: "Liquidity Network Pipelines", buy_p: "Sourcing Node", sell_p: "Target Liquid Market", entry_p: "Unit Entry Price",
-    exit_p: "Unit Liquidation Price", volume: "Processed Capital Mass", net_spread: "Calculated Alpha Spread",
+    exit_p: "Unit Liquidation Price", volume: "Capital Volume", net_spread: "Calculated Alpha Spread",
     profitable: "Optimal High-Yield Pipeline", unprofitable: "Suboptimal Flow - Negative Spread", save_trade: "Commit Record To Secure Memory",
     amount: "Asset Volume Size", notes: "Audit & Compliance Reference Logs", status: "Network Escrow State", platform: "Exchange Host",
     export_db: "Dump Master Database Image (JSON)", import_db: "Ingest Encrypted System File",
@@ -207,10 +203,10 @@ const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
     pending_capital: "Capital Bound in Escrow", break_even: "Absolute Loss Floor Limit", risk_level: "Risk Evaluation Model",
     ai_insights: "AI Predictive Operational Engine", bank_nodes: "Liquidity Rails / Bank Nodes", add_node: "Initialize Liquidity Rail",
     risk_rating: "Counterparty Counter-Risk Profile", merchant_tag: "Counterparty Unique Identifier", tri_arb: "Multi-Leg Triangular Arbitrage Matrix",
-    merchants_hub: "Merchant Directory", add_merchant: "Register Counterparty profile", balance_adjust: "Adjust Asset Pools"
+    merchants_hub: "Merchant Directory", add_merchant: "Register Counterparty Profile", balance_adjust: "Adjust Asset Pools"
   },
   ar: {
-    dashboard: "مركز القيادة", arbitrage: "مختبر التحكيم", trades: "المحرك المخصص", settings: "الإعدادات",
+    dashboard: "لوحة التحكم", arbitrage: "التحكيم الفوري", trades: "المحرك المخصص", settings: "الإعدادات",
     total_portfolio: "إجمالي قيمة رأس المال الموحد", today_profit: "صافي أرباح المحفظة المحققة", efficiency: "معدل كفاءة الصفقات",
     liquidity: "توزيع السيولة والأرصدة مخصص", buy_p: "منصة الشراء والتوريد", sell_p: "منصة التسييل والتصريف", entry_p: "سعر الشراء للوحدة",
     exit_p: "سعر البيع المستهدف للوحدة", volume: "حجم السيولة المدارة", net_spread: "صافي هامش الفارق العائد",
@@ -232,7 +228,7 @@ const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
     profitable: "Ruta de Arbitraje de Alto Rendimiento", unprofitable: "Diferencial de Capital Subóptimo", save_trade: "Ejecutar Registro Personalizado",
     amount: "Volumen de Activos", notes: "Notas de Contraparte", status: "Estado del Ecosistema", platform: "Exchange Gestor",
     export_db: "Copia de Seguridad (JSON)", import_db: "Restaurar Archivo de Contabilidad",
-    secure_note: "Almacenamiento local aislado activo. Cero riesgo de servidores externos.",
+    secure_note: "Almacenamiento local aislado activo dentro del dispositivo. Cero riesgo de servidores externos.",
     fees: "Comisiones Totales del Sistema", active_merchants: "Matriz de Contrapartes", filter_all: "Todas las Operaciones",
     pending_capital: "Capital de Depósito en Garantía", break_even: "Límite de Compra de Equilibrio", risk_level: "Evaluación de Riesgo",
     ai_insights: "Motor Operacional Predictivo por IA", bank_nodes: "Canales de Liquidez / Nodos Bancarios", add_node: "Inicializar Canal de Liquidez",
@@ -242,23 +238,23 @@ const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
 };
 
 // ==========================================
-// 3. LOGIC MODULE CONTROLLER
+// 3. MAIN CORE OPERATION SYSTEM ENGINE
 // ==========================================
 export default function MobileCoreApp() {
   const [lang, setLang] = useState<'en' | 'ar' | 'es'>('en');
   const [activeTab, setActiveTab] = useState<'dash' | 'arb' | 'trades' | 'settings'>('dash');
   
-  // Data State Arrays
+  // Storage Matrices States
   const [trades, setTrades] = useState<Trade[]>([]);
   const [banks, setBanks] = useState<BankNode[]>([]);
   const [merchants, setMerchants] = useState<MerchantProfile[]>([]);
   
-  // Dynamic Query Pipelines
+  // Pipeline Queries Filter Arrays
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [sortOrder, setSortOrder] = useState<'NEWEST' | 'PROFIT_DESC' | 'ROI_DESC'>('NEWEST');
 
-  // CUSTOM TRANSACTION MAKER FORM STATES
+  // UNRESTRICTED DYNAMIC INPUT COMPONENT STATES
   const [assetType, setAssetType] = useState<string>('USDT');
   const [buyAmount, setBuyAmount] = useState<number>(2000);
   const [buyPrice, setBuyPrice] = useState<number>(1.00);
@@ -278,20 +274,20 @@ export default function MobileCoreApp() {
   const [tradeStatus, setTradeStatus] = useState<Trade['status']>('Completed');
   const [userNotes, setUserNotes] = useState<string>('');
 
-  // Node Modifier Forms States
+  // Liquidity Rail Forms Input States
   const [newBankName, setNewBankName] = useState<string>('');
   const [newBankCurrency, setNewBankCurrency] = useState<string>('EUR');
   const [newBankBalance, setNewBankBalance] = useState<number>(5000);
   const [selectedBankId, setSelectedBankId] = useState<string>('');
   const [balanceAdjustmentAmount, setBalanceAdjustmentAmount] = useState<number>(0);
 
-  // Merchant Profile Form States
+  // Counterparty Directory Registration Input States
   const [mName, setMName] = useState<string>('');
   const [mPlatform, setMPlatform] = useState<string>('Binance');
   const [mRating, setMRating] = useState<number>(99.2);
   const [mNotes, setMNotes] = useState<string>('');
 
-  // Live Advanced Arbitrage Analyzer Inputs
+  // Arbitrage Simulation Parameter Inputs
   const [arbVol, setArbVol] = useState<number>(5000);
   const [arbBuyPrice, setArbBuyPrice] = useState<number>(1.00);
   const [arbSellPrice, setArbSellPrice] = useState<number>(1.042);
@@ -300,7 +296,6 @@ export default function MobileCoreApp() {
   const t = translations[lang];
   const isRTL = lang === 'ar';
 
-  // Synchronous State Restoration Pipeline
   const refreshCoreDatasets = () => {
     dbGetTrades().then(setTrades).catch(console.error);
     dbGetMerchants().then(setMerchants).catch(console.error);
@@ -350,7 +345,6 @@ export default function MobileCoreApp() {
     
     await dbSaveTrade(freshTrade);
     
-    // Automatically dynamic update corresponding bank balances based on trade execution parameters
     if (tradeStatus === 'Completed') {
       const sourceBank = banks.find(b => b.name.toLowerCase().includes(buyMethod.toLowerCase()));
       if (sourceBank) {
@@ -364,7 +358,7 @@ export default function MobileCoreApp() {
       }
     }
 
-    alert(lang === 'ar' ? 'تم تأكيد وحفظ المعاملة وموازنة الحسابات!' : 'Ecosystem trade blueprint saved and bank rails automatically rebalanced!');
+    alert(lang === 'ar' ? 'تمت معالجة الصفقة وموازنة المحافظ تلقائياً!' : 'Ecosystem trade blueprint saved and bank rails automatically rebalanced!');
     setMerchantName('');
     setUserNotes('');
     refreshCoreDatasets();
@@ -391,7 +385,7 @@ export default function MobileCoreApp() {
     target.balance += balanceAdjustmentAmount;
     await dbSaveBank(target);
     setBalanceAdjustmentAmount(0);
-    alert(lang === 'ar' ? 'تمت تسوية رصيد القناة البنكية!' : 'Bank node liquidity allocation updated!');
+    alert(lang === 'ar' ? 'تمت تسوية رصيد القناة البنكية المحددة!' : 'Bank node liquidity allocation updated!');
     dbGetBanks().then(setBanks);
   };
 
@@ -428,20 +422,21 @@ export default function MobileCoreApp() {
     const backupDumpString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ trades, banks, merchants }, null, 2));
     const shadowAnchor = document.createElement('a');
     shadowAnchor.setAttribute("href", backupDumpString);
-    shadowAnchor.setAttribute("download", `p2p_godmode_master_dump_${new Date().toISOString().split('T')[0]}.json`);
+    shadowAnchor.setAttribute("download", `p2x_godmode_master_backup_${new Date().toISOString().split('T')[0]}.json`);
     shadowAnchor.click();
   };
 
   const handleWipeDatabase = async () => {
-    if (confirm(lang === 'ar' ? 'تأكيد تصفير ومسح قاعدة البيانات تماماً؟' : 'CRITICAL ACTION: This wipes all trades, banks, and merchants local footprints. Proceed?')) {
+    if (confirm(lang === 'ar' ? 'تأكيد تصفير ومسح قاعدة البيانات تماماً من ذاكرة الهاتف الحالية؟' : 'CRITICAL ACTION: This wipes all trades, banks, and merchants local footprints. Proceed?')) {
       await dbWipeAllData();
       setTrades([]);
       setBanks([]);
       setMerchants([]);
+      alert(lang === 'ar' ? 'تم مسح ذاكرة النظام!' : 'Local ecosystem storage securely wiped.');
     }
   };
 
-  // High-Performance Live Mathematical Matrix Pipeline Aggregations
+  // Live Computational Aggregate Metrics Pipelines
   const completedTrades = trades.filter(x => x.status === 'Completed');
   const totalRealizedProfit = completedTrades.reduce((sum, curr) => sum + curr.net_profit_usd, 0);
   const totalSystemFrictionFees = trades.reduce((sum, curr) => sum + curr.buy_fee + curr.sell_fee, 0);
@@ -449,14 +444,13 @@ export default function MobileCoreApp() {
   const totalVolumeMassHandled = trades.reduce((sum, curr) => sum + (curr.buy_amount * curr.buy_price), 0);
   const averageSpreadCapturedPct = completedTrades.length > 0 ? (completedTrades.reduce((sum, curr) => sum + curr.roi, 0) / completedTrades.length) : 0;
 
-  // Arbitrage Lab Local Math Evaluators
+  // Arbitrage Core Matrix Mathematical Algorithms
   const totalAquisitionOutflow = (arbVol * arbBuyPrice) + arbHopFee;
   const totalLiquidationInflow = (arbVol * arbSellPrice) - arbHopFee;
   const liveAlphaProfitResult = totalLiquidationInflow - totalAquisitionOutflow;
   const liveAlphaSpreadPct = totalAquisitionOutflow > 0 ? (liveAlphaProfitResult / totalAquisitionOutflow) * 100 : 0;
   const liveEcosystemBreakEven = arbBuyPrice + (arbHopFee * 2 / arbVol);
 
-  // Search Engine & Sorting Pipeline Architecture
   const processedLedgerFeed = trades.filter(item => {
     const query = searchQuery.toLowerCase();
     const searchMatch = item.merchant_name.toLowerCase().includes(query) ||
@@ -469,25 +463,28 @@ export default function MobileCoreApp() {
   }).sort((a, b) => {
     if (sortOrder === 'PROFIT_DESC') return b.net_profit_usd - a.net_profit_usd;
     if (sortOrder === 'ROI_DESC') return b.roi - a.roi;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); // Default Newest
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); 
   });
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-100 font-sans antialiased" dir={isRTL ? 'rtl' : 'ltr'}>
       
-      {/* NATIVE CORE HEADER CONTROL BAR */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-zinc-900/60 border-b border-zinc-800/80 backdrop-blur-xl shadow-md">
-        <div className="flex items-center space-x-2.5 rtl:space-x-reverse">
-          <div className="w-3 h-3 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.7)]" />
-          <h1 className="text-xs font-black tracking-widest text-zinc-200 uppercase">P2P.OS // UNLIMITED_SUITE</h1>
+      {/* SLEEK ULTRA-MINIMALIST FINTECH LOGO HEADER BAR */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-zinc-950 border-b border-zinc-900/60 backdrop-blur-xl">
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+          <div className="w-5 h-5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+          <h1 className="text-base font-black tracking-tighter text-zinc-100">P2X</h1>
         </div>
-        <div className="flex bg-zinc-950 p-1 rounded-xl border border-zinc-900 shadow-inner">
+        
+        <div className="flex bg-zinc-900 p-0.5 rounded-lg border border-zinc-800">
           {(['en', 'ar', 'es'] as const).map((langItem) => (
             <button
               key={langItem}
               type="button"
               onClick={() => setLang(langItem)}
-              className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg transition-all ${lang === langItem ? 'bg-gradient-to-tr from-emerald-500 to-teal-600 text-zinc-950 font-bold shadow-md' : 'text-zinc-500'}`}
+              className={`px-2.5 py-0.5 text-[9px] uppercase font-bold rounded-md transition-all ${lang === langItem ? 'bg-zinc-800 text-emerald-400 shadow-sm' : 'text-zinc-600'}`}
             >
               {langItem}
             </button>
@@ -495,59 +492,56 @@ export default function MobileCoreApp() {
         </div>
       </header>
 
-      {/* CORE FRAMEWORK ACTION SLIDER VIEWS */}
+      {/* COMPACT MOBILE CORE SLIDER SCREEN WRAPPERS */}
       <main className="flex-1 p-4 space-y-4 overflow-y-auto pb-24">
         
-        {/* VIEW 1: ADVANCED COMMAND CENTER (DASHBOARD) */}
+        {/* VIEW 1: DASHBOARD COMMAND CENTER OVERVIEW */}
         {activeTab === 'dash' && (
           <div className="space-y-4 animate-fade-in">
-            {/* Massive Capital Pool Enclave Card */}
+            {/* Consolidated Pool Valuation Enclave Asset Card */}
             <div className="p-6 rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full filter blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-teal-500/5 to-transparent rounded-full filter blur-2xl" />
-              
               <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">{t.total_portfolio}</span>
-              <span className="text-4xl font-black mt-1 bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-400 bg-clip-text text-transparent tracking-tight block">
+              <span className="text-4xl font-black mt-1 bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-400 bg-clip-text text-transparent tracking-tight block">
                 ${(45000 + totalRealizedProfit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              
-              <div className="mt-5 flex items-center justify-between border-t border-zinc-900 pt-4">
+              <div className="mt-4 flex items-center border-t border-zinc-900 pt-4">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-xl font-black">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  <span>+${totalRealizedProfit.toLocaleString(undefined, { maximumFractionDigits: 2 })} COMBINED YIELD ALPHA</span>
+                  <span>+${totalRealizedProfit.toLocaleString(undefined, { maximumFractionDigits: 2 })} COMPREHENSIVE REVENUE DISPATCH</span>
                 </div>
               </div>
             </div>
 
-            {/* Extended Advanced Analytics Dashboard Quad Array */}
+            {/* Core Statistics Quad Matrix Block Grid */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
                 <span className="text-[10px] text-zinc-500 font-bold uppercase block">{t.today_profit}</span>
                 <span className="text-xl font-black text-emerald-400 mt-1 block">+${totalRealizedProfit.toFixed(2)}</span>
-                <div className="w-1 h-8 bg-emerald-500 absolute top-4 left-0 rtl:right-0" />
+                <div className="w-1 h-8 bg-emerald-500 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
                 <span className="text-[10px] text-zinc-500 font-bold uppercase block">{t.pending_capital}</span>
                 <span className="text-xl font-black text-amber-500 mt-1 block">${lockedEscrowAssets.toFixed(2)}</span>
-                <div className="w-1 h-8 bg-amber-500 absolute top-4 left-0 rtl:right-0" />
+                <div className="w-1 h-8 bg-amber-500 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase block">Avg Capture Spread</span>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase block">Avg Captured Spread</span>
                 <span className="text-xl font-black text-teal-400 mt-1 block">{averageSpreadCapturedPct.toFixed(2)}%</span>
-                <div className="w-1 h-8 bg-teal-500 absolute top-4 left-0 rtl:right-0" />
+                <div className="w-1 h-8 bg-teal-500 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase block">Total Mass Mass Volume</span>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase block">Total Mass Volume</span>
                 <span className="text-xl font-black text-zinc-100 mt-1 block">${totalVolumeMassHandled.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                <div className="w-1 h-8 bg-zinc-400 absolute top-4 left-0 rtl:right-0" />
+                <div className="w-1 h-8 bg-zinc-400 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
             </div>
 
-            {/* PURE SVG SYSTEM AREA TELEMETRY FLOW GRAPH */}
+            {/* PURE AUTOMATED LINE-SPLINE SVG TELEMETRY DATA GRAPH */}
             <div className="p-4 rounded-3xl bg-zinc-900/40 border border-zinc-900 space-y-3">
               <div className="flex justify-between items-center px-1">
                 <span className="text-xs font-black text-zinc-400 uppercase tracking-wider">Ecosystem Yield Velocity Spline</span>
-                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">Telemetry Active</span>
+                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">Telemetry Stream</span>
               </div>
               <div className="w-full bg-zinc-950 p-2 rounded-2xl border border-zinc-900/80">
                 <svg viewBox="0 0 300 100" className="w-full h-28 overflow-visible stroke-emerald-400 fill-none">
@@ -568,19 +562,17 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* REAL-TIME DYNAMIC LIQUIDITY BANK NODE MANAGER WITH BALANCE ADJUSTMENT */}
+            {/* DYNAMIC LIQUIDITY RAIL GATEWAY MANAGERS ARRAY */}
             <div className="p-4 rounded-3xl bg-zinc-900/40 border border-zinc-900 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-zinc-500" /> {t.bank_nodes}
-                </h3>
-              </div>
+              <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-zinc-500" /> {t.bank_nodes}
+              </h3>
               <div className="space-y-2.5">
                 {banks.map((bank) => (
                   <div key={bank.id} onClick={() => setSelectedBankId(bank.id)} className={`p-3 bg-zinc-950 border rounded-2xl transition-all cursor-pointer flex items-center justify-between ${selectedBankId === bank.id ? 'border-emerald-500 bg-zinc-900/40' : 'border-zinc-900'}`}>
                     <div>
                       <span className="text-xs font-bold text-zinc-200 block">{bank.name}</span>
-                      <span className="text-[10px] text-zinc-500 uppercase mt-0.5 block">Rail Asset Gateway</span>
+                      <span className="text-[10px] text-zinc-500 uppercase mt-0.5 block font-mono">Friction base estimate: {bank.estimated_fee_pct}%</span>
                     </div>
                     <span className="font-mono text-xs font-bold bg-zinc-900 p-2 rounded-xl border border-zinc-800 text-zinc-100">
                       {bank.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })} {bank.currency}
@@ -598,17 +590,17 @@ export default function MobileCoreApp() {
                       placeholder="Amount (+/-)" 
                       value={balanceAdjustmentAmount || ''} 
                       onChange={(e) => setBalanceAdjustmentAmount(Number(e.target.value))}
-                      className="flex-1 h-10 px-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none"
+                      className="flex-1 h-10 px-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono outline-none"
                     />
                     <button type="button" onClick={handleAdjustBankBalance} className="h-10 px-4 bg-emerald-500 text-zinc-950 text-xs font-bold rounded-xl active:scale-95 transition-transform">
-                      Rebalance Pool
+                      Rebalance Rail Pool
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* ARTIFICIAL AI OPERATIONAL EMULATOR FEED */}
+            {/* ARTIFICIAL PROCEDURAL INTELLIGENCE INSIGHT MODULE RENDERER */}
             <div className="p-4 rounded-3xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-zinc-800 shadow-xl space-y-3">
               <div className="flex items-center gap-2 text-xs font-black text-zinc-200 uppercase tracking-widest">
                 <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
@@ -628,13 +620,12 @@ export default function MobileCoreApp() {
           </div>
         )}
 
-        {/* VIEW 2: ARBITRAGE ADVANCED LAB */}
+        {/* VIEW 2: ARBITRAGE SIMULATION LAB SUITE */}
         {activeTab === 'arb' && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="text-base font-black text-zinc-100 flex items-center gap-2">
               <Shuffle className="w-4 h-4 text-emerald-400" /> {t.tri_arb}
             </h2>
-
             <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-4">
               <div>
                 <label className="text-[10px] uppercase tracking-wider font-black text-zinc-500">{t.volume}</label>
@@ -684,16 +675,14 @@ export default function MobileCoreApp() {
           </div>
         )}
 
-        {/* VIEW 3: GLOBAL UNRESTRICTED LEDGER & DIRECTORY WORKSPACE */}
+        {/* VIEW 3: GLOBAL UNRESTRICTED LEDGER HISTORY SYSTEM */}
         {activeTab === 'trades' && (
           <div className="space-y-4 animate-fade-in">
-            
-            {/* PORTAL ACTION SHEET: RECORD TRANSACTION */}
+            {/* Input Entry Portal Sheet */}
             <div className="p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800 space-y-4 shadow-xl">
               <h2 className="text-xs font-black text-zinc-300 flex items-center gap-2 uppercase tracking-widest">
                 <Coins className="w-4 h-4 text-emerald-400" /> {t.save_trade}
               </h2>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-zinc-500 font-bold uppercase">Asset Token</label>
@@ -705,9 +694,9 @@ export default function MobileCoreApp() {
                 </div>
               </div>
 
-              {/* SOURCING PIPELINE LAYERS */}
+              {/* SOURCING ENTRY PARAMS */}
               <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-900 space-y-3">
-                <span className="text-[9px] font-black tracking-wider text-emerald-400 uppercase block">Asset Sourcing Parameters</span>
+                <span className="text-[9px] font-black tracking-wider text-emerald-400 uppercase block">Asset Sourcing Engine Layer</span>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="text-[9px] text-zinc-600 block">Buy Unit Price</label>
@@ -718,7 +707,7 @@ export default function MobileCoreApp() {
                     <input type="text" value={buyCurrency} onChange={(e) => setBuyCurrency(e.target.value)} placeholder="EUR" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs font-bold uppercase outline-none" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-zinc-600 block">Exchange</label>
+                    <label className="text-[9px] text-zinc-600 block">Exchange Host</label>
                     <input type="text" value={buyPlatform} onChange={(e) => setBuyPlatform(e.target.value)} placeholder="Binance" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
                   </div>
                 </div>
@@ -734,9 +723,9 @@ export default function MobileCoreApp() {
                 </div>
               </div>
 
-              {/* LIQUIDATION PIPELINE LAYERS */}
+              {/* LIQUIDATION ENTRY PARAMS */}
               <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-900 space-y-3">
-                <span className="text-[9px] font-black tracking-wider text-amber-400 uppercase block">Asset Liquidation Parameters</span>
+                <span className="text-[9px] font-black tracking-wider text-amber-400 uppercase block">Asset Liquidation Engine Layer</span>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="text-[9px] text-zinc-600 block">Sell Unit Price</label>
@@ -747,13 +736,13 @@ export default function MobileCoreApp() {
                     <input type="text" value={sellCurrency} onChange={(e) => setSellCurrency(e.target.value)} placeholder="EGP" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs font-bold uppercase outline-none" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-zinc-600 block">Liquid Exchange</label>
+                    <label className="text-[9px] text-zinc-600 block">Liquid Target Exchange</label>
                     <input type="text" value={sellPlatform} onChange={(e) => setSellPlatform(e.target.value)} placeholder="Bybit" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] text-zinc-600 block">Inflow Bank Channel</label>
+                    <label className="text-[9px] text-zinc-600 block">Inflow Bank Rail</label>
                     <input type="text" value={sellMethod} onChange={(e) => setSellMethod(e.target.value)} placeholder="Vodafone Cash" className="w-full h-9 px-3 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
                   </div>
                   <div>
@@ -799,7 +788,7 @@ export default function MobileCoreApp() {
               </button>
             </div>
 
-            {/* INTEGRATED DIRECTORY TAB PANEL: REGISTER P2P COUNTERPARTIES */}
+            {/* INTEGRATED REGISTER MERCHANT HUB COMPONENT */}
             <div className="p-4 rounded-3xl bg-zinc-900/40 border border-zinc-900 space-y-3.5">
               <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4 text-zinc-500" /> {t.merchants_hub}
@@ -807,22 +796,22 @@ export default function MobileCoreApp() {
               <div className="space-y-3">
                 <input type="text" placeholder="Counterparty Username Alias" value={mName} onChange={(e) => setMName(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder="Base Platform (e.g. OKX)" value={mPlatform} onChange={(e) => setMPlatform(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
-                  <input type="number" step="0.1" placeholder="Completion Rating %" value={mRating || ''} onChange={(e) => setMRating(Number(e.target.value))} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                  <input type="text" placeholder="Base Platform Host" value={mPlatform} onChange={(e) => setMPlatform(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                  <input type="number" step="0.1" placeholder="Completion Rating %" value={mRating || ''} onChange={(e) => setMRating(Number(e.target.value))} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono outline-none" />
                 </div>
-                <input type="text" placeholder="Operator feedback notes" value={mNotes} onChange={(e) => setMNotes(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                <input type="text" placeholder="Operator feedback parameters notes" value={mNotes} onChange={(e) => setMNotes(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                 <button type="button" onClick={handleRegisterMerchant} className="w-full h-11 bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold rounded-xl text-xs active:scale-95 transition-transform">
                   {t.add_merchant}
                 </button>
               </div>
 
-              {/* LIVE REGISTERED MERCHANTS RENDERING ROWS */}
+              {/* RENDER ACTIVE VERIFIED PRO/ flagged COUNTERPARTIES LIST */}
               <div className="space-y-2 pt-2 border-t border-zinc-900">
                 {merchants.map((m) => (
                   <div key={m.id} className={`p-3 rounded-xl border flex items-center justify-between text-xs ${m.is_warning ? 'bg-red-950/10 border-red-900/40' : 'bg-zinc-950 border-zinc-900/60'}`}>
                     <div>
                       <span className="font-bold text-zinc-200 block">{m.name} <span className="text-[9px] text-zinc-600 font-mono">({m.platform})</span></span>
-                      <span className="text-[10px] text-zinc-500 mt-0.5 block font-mono">Success Score: {m.rating}% // {m.notes}</span>
+                      <span className="text-[10px] text-zinc-500 mt-0.5 block font-mono">Success Metrics: {m.rating}% // {m.notes}</span>
                     </div>
                     <div className="flex gap-1.5">
                       <button type="button" onClick={() => handleToggleMerchantFavorite(m)} className={`p-2 rounded-lg border transition-colors ${m.is_favorite ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
@@ -837,31 +826,30 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* DYNAMIC PIPELINE MATRIX SEARCH & MULTI-FILTER TOOLS */}
+            {/* DYNAMIC LEDGER LOOKUP PIPELINE QUERY TOOLS */}
             <div className="space-y-3 pt-2">
               <div className="space-y-2">
                 <div className="bg-zinc-900 rounded-xl border border-zinc-800 flex items-center px-3 gap-2">
                   <Search className="w-4 h-4 text-zinc-500" />
-                  <input type="text" placeholder="Query asset, merchant, payment channel..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-11 bg-transparent text-xs text-zinc-100 outline-none" />
+                  <input type="text" placeholder="Query tokens, merchant, bank rail channels..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-11 bg-transparent text-xs text-zinc-100 outline-none" />
                 </div>
-                
                 <div className="grid grid-cols-2 gap-2">
                   <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs rounded-xl px-2 outline-none font-bold">
-                    <option value="ALL">ALL STATES</option>
+                    <option value="ALL">ALL LEDGER STATES</option>
                     <option value="Completed">Completed</option>
                     <option value="Pending">Pending</option>
                     <option value="Disputed">Disputed</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
                   <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as any)} className="h-10 bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs rounded-xl px-2 outline-none font-bold">
-                    <option value="NEWEST">NEWEST ENTRY</option>
-                    <option value="PROFIT_DESC">MAX PROFIT YIELD</option>
-                    <option value="ROI_DESC">HIGHEST SPREAD ROI</option>
+                    <option value="NEWEST">CHRONO NEWEST</option>
+                    <option value="PROFIT_DESC">MAX YIELD SPREAD</option>
+                    <option value="ROI_DESC">HIGHEST ROI VELOCITY</option>
                   </select>
                 </div>
               </div>
 
-              {/* RENDER MASTER UNRESTRICTED CORE HISTORY LOG FEED */}
+              {/* RENDER MASTER DATA RECURSIVE BLOCKS */}
               <div className="space-y-2.5">
                 {processedLedgerFeed.length === 0 ? (
                   <div className="text-center py-10 text-xs text-zinc-600 border border-dashed border-zinc-900 rounded-3xl">{t.filter_all} is empty.</div>
@@ -910,7 +898,7 @@ export default function MobileCoreApp() {
           </div>
         )}
 
-        {/* VIEW 4: SYSTEM CONFIGURATION CORE & MAINTENANCE TOOLS */}
+        {/* VIEW 4: SYSTEM CORE ROOT & RESET ENCLAVES */}
         {activeTab === 'settings' && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="text-base font-black text-zinc-100 flex items-center gap-2">
@@ -934,7 +922,7 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* MASTER ECOSYSTEM JSON DUMP SYNC UTILITIES */}
+            {/* ENCRYPTED STATE IMAGE BACKUP MODULE */}
             <div className="p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800 space-y-3 shadow-xl">
               <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                 <Receipt className="w-3.5 h-3.5 text-zinc-500" /> System State Backup Engine
@@ -946,19 +934,19 @@ export default function MobileCoreApp() {
                 <label className="w-full h-12 border border-zinc-800 border-dashed bg-zinc-950 rounded-xl font-bold text-zinc-400 text-xs flex items-center justify-center gap-2 cursor-pointer active:bg-zinc-900">
                   <Upload className="w-4 h-4 text-teal-400" /> {t.import_db}
                   <input type="file" accept=".json" className="hidden" onChange={async (e) => {
-                    const selectFile = e.target.files?.[0];
-                    if (!selectFile) return;
+                    const chosenFile = e.target.files?.[0];
+                    if (!chosenFile) return;
                     try {
-                      const textPayload = await selectFile.text();
-                      const parsed = JSON.parse(textPayload);
-                      if (parsed.trades) {
-                        for (const r of parsed.trades) await dbSaveTrade(r);
+                      const dataStreamString = await chosenFile.text();
+                      const payload = JSON.parse(dataStreamString);
+                      if (payload.trades) {
+                        for (const r of payload.trades) await dbSaveTrade(r);
                       }
-                      if (parsed.banks) {
-                        for (const b of parsed.banks) await dbSaveBank(b);
+                      if (payload.banks) {
+                        for (const b of payload.banks) await dbSaveBank(b);
                       }
-                      if (parsed.merchants) {
-                        for (const m of parsed.merchants) await dbSaveMerchant(m);
+                      if (payload.merchants) {
+                        for (const m of payload.merchants) await dbSaveMerchant(m);
                       }
                       alert('Ecosystem dataset structures fully restored and populated into local disk!');
                       refreshCoreDatasets();
@@ -968,7 +956,7 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* FACTORY RECOVERY WIPE DATA BLOCK */}
+            {/* HARD ECOSYSTEM DISK RESET ENCLAVE */}
             <div className="p-4 rounded-3xl bg-red-950/10 border border-red-900/30 space-y-2">
               <h3 className="text-xs font-bold text-red-400 uppercase flex items-center gap-1.5"><ShieldAlert className="w-4 h-4 text-red-400" /> Hard Reset Modality</h3>
               <button type="button" onClick={handleWipeDatabase} className="w-full h-11 bg-red-500/10 text-red-400 border border-red-500/20 font-bold rounded-xl text-xs flex items-center justify-center gap-2">
@@ -985,7 +973,7 @@ export default function MobileCoreApp() {
 
       </main>
 
-      {/* ERGONOMIC NATIVE MOBILE HORIZON NAVBAR */}
+      {/* ERGONOMIC NATIVE MOBILE GESTURE- ملائمة BOTTOM HORIZON NAVBAR */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 border-t border-zinc-900/80 backdrop-blur-xl px-2 pb-safe shadow-[0_-10px_35px_rgba(0,0,0,0.9)]">
         <div className="flex justify-around items-center h-16">
           {[
