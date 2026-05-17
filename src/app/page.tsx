@@ -23,10 +23,7 @@ import {
   Sparkles,
   Users,
   Star,
-  DollarSign,
-  Briefcase,
-  TrendingDown,
-  Layers
+  Briefcase
 } from 'lucide-react';
 
 // ==========================================
@@ -414,6 +411,7 @@ export default function MobileCoreApp() {
     await dbSaveConfig(updatedCfg);
     setSysConfig(updatedCfg);
     alert(lang === 'ar' ? 'تم تحديث أبعاد رأس المال بنجاح!' : 'System base parameters committed successfully!');
+    refreshCoreDatasets();
     setActiveTab('dash');
   };
 
@@ -490,7 +488,7 @@ export default function MobileCoreApp() {
     }
   };
 
-  // --- COMPILER-SAFE LOGIC PIPELINE MEMO METRICS ---
+  // --- COMPILER-SAFE LOGIC PIPELINE MEMO METRICS (Fixed Typo Bug) ---
   const completedTrades = useMemo(() => trades.filter(x => x.status === 'Completed'), [trades]);
   
   const metrics = useMemo(() => {
@@ -503,7 +501,7 @@ export default function MobileCoreApp() {
     return { profitSum, feesSum, escrowSum, totalVolMass, avgSpread };
   }, [trades, completedTrades]);
 
-  // Arbitrage Lab Matrix Mathematical Calculations
+  // Arbitrage Lab Matrix Mathematical Algorithms
   const totalAquisitionOutflow = (arbVol * arbBuyPrice) + arbHopFee;
   const totalLiquidationInflow = (arbVol * arbSellPrice) - arbHopFee;
   const liveAlphaProfitResult = totalLiquidationInflow - totalAquisitionOutflow;
@@ -533,7 +531,7 @@ export default function MobileCoreApp() {
       
       {/* ULTRA-MINIMALIST FINTECH DESIGN BRAND HEADER BAR */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-zinc-950 border-b border-zinc-900/60 backdrop-blur-xl">
-        <div className="flex items-center space-x-1.5 src-rail rtl:space-x-reverse">
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
           <div className="w-5 h-5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
@@ -865,7 +863,7 @@ export default function MobileCoreApp() {
                   <input type="text" placeholder="Base Platform Exchange" value={mPlatform} onChange={(e) => setMPlatform(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                   <input type="number" step="0.1" placeholder="Completion Rating %" value={mRating || ''} onChange={(e) => setMRating(Number(e.target.value))} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono outline-none" />
                 </div>
-                <input type="text" placeholder="Operational feedback reference parameters" value={mNotes} onChange={(e) => setMNotes(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                <input type="text" placeholder="Operator feedback reference parameters" value={mNotes} onChange={(e) => setMNotes(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                 <button type="button" onClick={handleRegisterMerchant} className="w-full h-11 bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold rounded-xl text-xs active:scale-95 transition-transform">
                   {t.add_merchant}
                 </button>
@@ -897,7 +895,7 @@ export default function MobileCoreApp() {
               <div className="space-y-2">
                 <div className="bg-zinc-900 rounded-xl border border-zinc-800 flex items-center px-3 gap-2">
                   <Search className="w-4 h-4 text-zinc-500" />
-                  <input type="text" placeholder="Query custom asset token, merchant ID, bank rails..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-11 bg-transparent text-xs text-zinc-100 outline-none" />
+                  <input type="text" placeholder="Query custom asset token, merchant ID, bank rail channels..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-11 bg-transparent text-xs text-zinc-100 outline-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs rounded-xl px-2 outline-none font-bold">
@@ -932,7 +930,7 @@ export default function MobileCoreApp() {
                             <span className="text-amber-400 font-extrabold">{item.sell_platform}</span>
                           </div>
                           <span className="text-[10px] text-zinc-500 block mt-1 font-mono">
-                            Counterparty: {item.merchant_name} // Rail: {item.buy_payment_method} ➔ {item.sell_payment_method}
+                            Counterparty: {item.merchant_name} // Route: {item.buy_payment_method} ➔ {item.sell_payment_method}
                           </span>
                         </div>
                         <div className="text-end">
@@ -1062,7 +1060,7 @@ export default function MobileCoreApp() {
 
       </main>
 
-      {/* ERGONOMIC NATIVE MOBILE HORIZON NAVIGATION BOTTOM NAVBAR */}
+      {/* ERGONOMIC NATIVE MOBILE GESTURE BOTTOM NAVBAR */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 border-t border-zinc-900/80 backdrop-blur-xl px-2 pb-safe shadow-[0_-10px_35px_rgba(0,0,0,0.9)]">
         <div className="flex justify-around items-center h-16">
           {[
