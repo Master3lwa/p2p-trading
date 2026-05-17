@@ -360,18 +360,18 @@ export default function MobileCoreApp() {
       id: `p2p_core_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
       status: tradeStatus,
       asset: assetType.toUpperCase().trim(),
-      buy_amount: buyAmount,
-      buy_price: buyPrice,
+      buy_amount: Number(buyAmount) || 0,
+      buy_price: Number(buyPrice) || 0,
       buy_currency: buyCurrency.toUpperCase().trim(),
       buy_platform: buyPlatform.trim(),
       buy_payment_method: buyMethod.trim(),
-      buy_fee: buyFee,
-      sell_amount: buyAmount,
-      sell_price: sellPrice,
+      buy_fee: Number(buyFee) || 0,
+      sell_amount: Number(buyAmount) || 0,
+      sell_price: Number(sellPrice) || 0,
       sell_currency: sellCurrency.toUpperCase().trim(),
       sell_platform: sellPlatform.trim(),
       sell_payment_method: sellMethod.trim(),
-      sell_fee: sellFee,
+      sell_fee: Number(sellFee) || 0,
       merchant_name: merchantName.trim() || 'Direct Pool Counterparty',
       merchant_risk: merchantRisk,
       net_profit_usd: 0,
@@ -405,8 +405,8 @@ export default function MobileCoreApp() {
   const handleCommitConfig = async () => {
     const updatedCfg: SystemConfig = {
       id: 'global',
-      base_capital: inputBaseCapital,
-      target_daily_goal: inputDailyGoal
+      base_capital: Number(inputBaseCapital) || 0,
+      target_daily_goal: Number(inputDailyGoal) || 0
     };
     await dbSaveConfig(updatedCfg);
     setSysConfig(updatedCfg);
@@ -421,7 +421,7 @@ export default function MobileCoreApp() {
       id: `bank_${Date.now()}`,
       name: newBankName.trim(),
       currency: newBankCurrency.toUpperCase().trim(),
-      balance: newBankBalance,
+      balance: Number(newBankBalance) || 0,
       estimated_fee_pct: 0.15
     };
     await dbSaveBank(freshBank);
@@ -433,7 +433,7 @@ export default function MobileCoreApp() {
   const handleAdjustBankBalance = async () => {
     const target = banks.find(b => b.id === selectedBankId);
     if (!target) return;
-    target.balance += balanceAdjustmentAmount;
+    target.balance += Number(balanceAdjustmentAmount) || 0;
     await dbSaveBank(target);
     setBalanceAdjustmentAmount(0);
     alert(lang === 'ar' ? 'تمت موازنة القناة المصرفية بنجاح!' : 'Bank node liquidity allocation updated!');
@@ -446,7 +446,7 @@ export default function MobileCoreApp() {
       id: `merch_${Date.now()}`,
       name: mName.trim(),
       platform: mPlatform,
-      rating: mRating,
+      rating: Number(mRating) || 0,
       is_favorite: false,
       is_warning: false,
       notes: mNotes.trim() || 'Profile initialized.'
@@ -488,7 +488,7 @@ export default function MobileCoreApp() {
     }
   };
 
-  // --- COMPILER-SAFE LOGIC PIPELINE MEMO METRICS (Fixed Typo Bug) ---
+  // --- FIXED RENDERING COMPILER-SAFE LOGIC PIPELINE ---
   const completedTrades = useMemo(() => trades.filter(x => x.status === 'Completed'), [trades]);
   
   const metrics = useMemo(() => {
