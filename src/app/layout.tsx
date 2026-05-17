@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import './globals.css';
+import '../globals.css';
 
 export const metadata = {
   title: 'P2P Trading OS',
