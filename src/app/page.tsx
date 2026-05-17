@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   Shuffle, 
@@ -22,11 +22,15 @@ import {
   Receipt, 
   Sparkles,
   Users,
-  Star
+  Star,
+  DollarSign,
+  Briefcase,
+  TrendingDown,
+  Layers
 } from 'lucide-react';
 
 // ==========================================
-// 1. EXTENDED PRODUCTION ARCHITECTURE TYPES
+// 1. ADVANCED MONOLITHIC ECOSYSTEM STRUCTS
 // ==========================================
 export interface Trade {
   id: string;
@@ -69,8 +73,14 @@ export interface MerchantProfile {
   notes: string;
 }
 
-const DB_NAME = 'P2X_Infinite_Custom_OS_DB_v4';
-const DB_VERSION = 4;
+export interface SystemConfig {
+  id: string;
+  base_capital: number;
+  target_daily_goal: number;
+}
+
+const DB_NAME = 'P2X_Ultimate_Quantum_OS_DB';
+const DB_VERSION = 5;
 
 const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -83,12 +93,14 @@ const initDB = (): Promise<IDBDatabase> => {
       if (!db.objectStoreNames.contains('trades')) db.createObjectStore('trades', { keyPath: 'id' });
       if (!db.objectStoreNames.contains('banks')) db.createObjectStore('banks', { keyPath: 'id' });
       if (!db.objectStoreNames.contains('merchants')) db.createObjectStore('merchants', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('config')) db.createObjectStore('config', { keyPath: 'id' });
     };
     request.onsuccess = (e: any) => resolve(request.target.result);
     request.onerror = (e: any) => reject(request.error);
   });
 };
 
+// --- CORE DISK DATA MUTATION UTILITIES ---
 const dbSaveTrade = async (trade: Trade): Promise<void> => {
   const db = await initDB();
   return new Promise((resolve, reject) => {
@@ -159,20 +171,46 @@ const dbGetMerchants = async (): Promise<MerchantProfile[]> => {
   });
 };
 
+const dbSaveConfig = async (cfg: SystemConfig): Promise<void> => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['config'], 'readwrite');
+    const store = tx.objectStore('config');
+    const req = store.put(cfg);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+};
+
+const dbGetConfig = async (): Promise<SystemConfig> => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['config'], 'readonly');
+    const store = tx.objectStore('config');
+    const req = store.get('global');
+    req.onsuccess = () => {
+      if (req.result) resolve(req.result);
+      else resolve({ id: 'global', base_capital: 0, target_daily_goal: 100 });
+    };
+    req.onerror = () => reject(req.error);
+  });
+};
+
 const dbWipeAllData = async (): Promise<void> => {
   const db = await initDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(['trades', 'banks', 'merchants'], 'readwrite');
+    const tx = db.transaction(['trades', 'banks', 'merchants', 'config'], 'readwrite');
     tx.objectStore('trades').clear();
     tx.objectStore('banks').clear();
     tx.objectStore('merchants').clear();
+    tx.objectStore('config').clear();
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 };
 
 // ==========================================
-// 2. MULTILINGUAL TRANSLATION ENGINE MATRIX
+// 2. PRODUCTION MULTILINGUAL RESOURCE DICTIONARY
 // ==========================================
 interface TranslationSchema {
   dashboard: string; arbitrage: string; trades: string; settings: string;
@@ -187,6 +225,7 @@ interface TranslationSchema {
   ai_insights: string; bank_nodes: string; add_node: string;
   risk_rating: string; merchant_tag: string; tri_arb: string;
   merchants_hub: string; add_merchant: string; balance_adjust: string;
+  base_capital_config: string; save_config: string; target_goal: string;
 }
 
 const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
@@ -203,10 +242,11 @@ const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
     pending_capital: "Capital Bound in Escrow", break_even: "Absolute Loss Floor Limit", risk_level: "Risk Evaluation Model",
     ai_insights: "AI Predictive Operational Engine", bank_nodes: "Liquidity Rails / Bank Nodes", add_node: "Initialize Liquidity Rail",
     risk_rating: "Counterparty Counter-Risk Profile", merchant_tag: "Counterparty Unique Identifier", tri_arb: "Multi-Leg Triangular Arbitrage Matrix",
-    merchants_hub: "Merchant Directory", add_merchant: "Register Counterparty Profile", balance_adjust: "Adjust Asset Pools"
+    merchants_hub: "Merchant Directory", add_merchant: "Register Counterparty Profile", balance_adjust: "Adjust Asset Pools",
+    base_capital_config: "Configure Base Seed Capital", save_config: "Commit Config Changes", target_goal: "Daily Profit Goal"
   },
   ar: {
-    dashboard: "لوحة التحكم", arbitrage: "التحكيم الفوري", trades: "المحرك المخصص", settings: "الإعدادات",
+    dashboard: "مركز القيادة", arbitrage: "مختبر التحكيم", trades: "المحرك المخصص", settings: "الإعدادات",
     total_portfolio: "إجمالي قيمة رأس المال الموحد", today_profit: "صافي أرباح المحفظة المحققة", efficiency: "معدل كفاءة الصفقات",
     liquidity: "توزيع السيولة والأرصدة مخصص", buy_p: "منصة الشراء والتوريد", sell_p: "منصة التسييل والتصريف", entry_p: "سعر الشراء للوحدة",
     exit_p: "سعر البيع المستهدف للوحدة", volume: "حجم السيولة المدارة", net_spread: "صافي هامش الفارق العائد",
@@ -218,7 +258,8 @@ const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
     pending_capital: "رأس المال المعلق في الضمان", break_even: "نقطة التعادل الآمنة", risk_level: "تصنيف تقييم المخاطر",
     ai_insights: "المحرك التحليلي الاستباقي للذكاء الاصطناعي", bank_nodes: "قنوات السيولة / الحسابات المصرفية", add_node: "تفعيل قناة سيولة بنكية جديدة",
     risk_rating: "مستوى مخاطر الطرف المقابل", merchant_tag: "الهوية الفريدة للتجّار والأطراف", tri_arb: "مصفوفة التحكيم الثلاثي متعدد العملات",
-    merchants_hub: "دليل حسابات التجار", add_merchant: "تسجيل ملف تاجر جديد", balance_adjust: "تعديل رصيد القنوات البنكية"
+    merchants_hub: "دليل حسابات التجار", add_merchant: "تسجيل ملف تاجر جديد", balance_adjust: "تعديل رصيد القنوات البنكية",
+    base_capital_config: "تهيئة وإعداد رأس المال الأساسي", save_config: "حفظ وتثبيت الإعدادات", target_goal: "الهدف اليومي للأرباح"
   },
   es: {
     dashboard: "Centro de Mando", arbitrage: "Laboratorio de Arbitraje", trades: "Libro Personalizado", settings: "Ajustes",
@@ -233,28 +274,30 @@ const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
     pending_capital: "Capital de Depósito en Garantía", break_even: "Límite de Compra de Equilibrio", risk_level: "Evaluación de Riesgo",
     ai_insights: "Motor Operacional Predictivo por IA", bank_nodes: "Canales de Liquidez / Nodos Bancarios", add_node: "Inicializar Canal de Liquidez",
     risk_rating: "Perfil de Riesgo de Contraparte", merchant_tag: "Firma de Identidad de Contraparte", tri_arb: "Matriz de Arbitraje Triangular Multi-Moneda",
-    merchants_hub: "Directorio de Comerciantes", add_merchant: "Registrar perfil de contraparte", balance_adjust: "Ajustar Pools de Activos"
+    merchants_hub: "Directorio de Comerciantes", add_merchant: "Registrar perfil de contraparte", balance_adjust: "Ajustar Pools de Activos",
+    base_capital_config: "Configurar Capital Inicial Semilla", save_config: "Guardar Configuración", target_goal: "Meta de Ganancia Diaria"
   }
 };
 
 // ==========================================
-// 3. MAIN CORE OPERATION SYSTEM ENGINE
+// 3. MAIN CORE ENGINE ARCHITECTURE COMPONENT
 // ==========================================
 export default function MobileCoreApp() {
   const [lang, setLang] = useState<'en' | 'ar' | 'es'>('en');
   const [activeTab, setActiveTab] = useState<'dash' | 'arb' | 'trades' | 'settings'>('dash');
   
-  // Storage Matrices States
+  // Data Stream Layout Array Hooks
   const [trades, setTrades] = useState<Trade[]>([]);
   const [banks, setBanks] = useState<BankNode[]>([]);
   const [merchants, setMerchants] = useState<MerchantProfile[]>([]);
+  const [sysConfig, setSysConfig] = useState<SystemConfig>({ id: 'global', base_capital: 0, target_daily_goal: 100 });
   
-  // Pipeline Queries Filter Arrays
+  // Query Filters State Matrix
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [sortOrder, setSortOrder] = useState<'NEWEST' | 'PROFIT_DESC' | 'ROI_DESC'>('NEWEST');
 
-  // UNRESTRICTED DYNAMIC INPUT COMPONENT STATES
+  // UNRESTRICTED FLEXIBLE RECORD FORMS FIELDS
   const [assetType, setAssetType] = useState<string>('USDT');
   const [buyAmount, setBuyAmount] = useState<number>(2000);
   const [buyPrice, setBuyPrice] = useState<number>(1.00);
@@ -274,20 +317,24 @@ export default function MobileCoreApp() {
   const [tradeStatus, setTradeStatus] = useState<Trade['status']>('Completed');
   const [userNotes, setUserNotes] = useState<string>('');
 
-  // Liquidity Rail Forms Input States
+  // Liquidity Modification States
   const [newBankName, setNewBankName] = useState<string>('');
   const [newBankCurrency, setNewBankCurrency] = useState<string>('EUR');
-  const [newBankBalance, setNewBankBalance] = useState<number>(5000);
+  const [newBankBalance, setNewBankBalance] = useState<number>(0);
   const [selectedBankId, setSelectedBankId] = useState<string>('');
   const [balanceAdjustmentAmount, setBalanceAdjustmentAmount] = useState<number>(0);
 
-  // Counterparty Directory Registration Input States
+  // System Core Configurations States
+  const [inputBaseCapital, setInputBaseCapital] = useState<number>(0);
+  const [inputDailyGoal, setInputDailyGoal] = useState<number>(100);
+
+  // Counterparty Registry Input States
   const [mName, setMName] = useState<string>('');
   const [mPlatform, setMPlatform] = useState<string>('Binance');
   const [mRating, setMRating] = useState<number>(99.2);
   const [mNotes, setMNotes] = useState<string>('');
 
-  // Arbitrage Simulation Parameter Inputs
+  // Arbitrage Sandbox Module Parameters
   const [arbVol, setArbVol] = useState<number>(5000);
   const [arbBuyPrice, setArbBuyPrice] = useState<number>(1.00);
   const [arbSellPrice, setArbSellPrice] = useState<number>(1.042);
@@ -299,18 +346,11 @@ export default function MobileCoreApp() {
   const refreshCoreDatasets = () => {
     dbGetTrades().then(setTrades).catch(console.error);
     dbGetMerchants().then(setMerchants).catch(console.error);
-    dbGetBanks().then(res => {
-      if (res.length === 0) {
-        const baselineNodes: BankNode[] = [
-          { id: 'b_1', name: 'Wise Core Node', currency: 'EUR', balance: 12000, estimated_fee_pct: 0.2 },
-          { id: 'b_2', name: 'Revolut Rail Enclave', currency: 'USD', balance: 9500, estimated_fee_pct: 0.1 },
-          { id: 'b_3', name: 'Vodafone Cash Reserve', currency: 'EGP', balance: 75000, estimated_fee_pct: 0.0 }
-        ];
-        baselineNodes.forEach(n => dbSaveBank(n));
-        setBanks(baselineNodes);
-      } else {
-        setBanks(res);
-      }
+    dbGetBanks().then(setBanks).catch(console.error);
+    dbGetConfig().then(cfg => {
+      setSysConfig(cfg);
+      setInputBaseCapital(cfg.base_capital);
+      setInputDailyGoal(cfg.target_daily_goal);
     }).catch(console.error);
   };
 
@@ -358,10 +398,22 @@ export default function MobileCoreApp() {
       }
     }
 
-    alert(lang === 'ar' ? 'تمت معالجة الصفقة وموازنة المحافظ تلقائياً!' : 'Ecosystem trade blueprint saved and bank rails automatically rebalanced!');
+    alert(lang === 'ar' ? 'تم حفظ المعاملة وموازنة الحسابات بنجاح!' : 'Ecosystem trade blueprint saved and bank rails automatically rebalanced!');
     setMerchantName('');
     setUserNotes('');
     refreshCoreDatasets();
+    setActiveTab('dash');
+  };
+
+  const handleCommitConfig = async () => {
+    const updatedCfg: SystemConfig = {
+      id: 'global',
+      base_capital: inputBaseCapital,
+      target_daily_goal: inputDailyGoal
+    };
+    await dbSaveConfig(updatedCfg);
+    setSysConfig(updatedCfg);
+    alert(lang === 'ar' ? 'تم تحديث أبعاد رأس المال بنجاح!' : 'System base parameters committed successfully!');
     setActiveTab('dash');
   };
 
@@ -376,6 +428,7 @@ export default function MobileCoreApp() {
     };
     await dbSaveBank(freshBank);
     setNewBankName('');
+    setNewBankBalance(0);
     dbGetBanks().then(setBanks);
   };
 
@@ -385,7 +438,7 @@ export default function MobileCoreApp() {
     target.balance += balanceAdjustmentAmount;
     await dbSaveBank(target);
     setBalanceAdjustmentAmount(0);
-    alert(lang === 'ar' ? 'تمت تسوية رصيد القناة البنكية المحددة!' : 'Bank node liquidity allocation updated!');
+    alert(lang === 'ar' ? 'تمت موازنة القناة المصرفية بنجاح!' : 'Bank node liquidity allocation updated!');
     dbGetBanks().then(setBanks);
   };
 
@@ -419,59 +472,68 @@ export default function MobileCoreApp() {
   };
 
   const handleBackupExport = () => {
-    const backupDumpString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ trades, banks, merchants }, null, 2));
+    const backupDumpString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ trades, banks, merchants, sysConfig }, null, 2));
     const shadowAnchor = document.createElement('a');
     shadowAnchor.setAttribute("href", backupDumpString);
-    shadowAnchor.setAttribute("download", `p2x_godmode_master_backup_${new Date().toISOString().split('T')[0]}.json`);
+    shadowAnchor.setAttribute("download", `p2x_quantum_system_master_backup_${new Date().toISOString().split('T')[0]}.json`);
     shadowAnchor.click();
   };
 
   const handleWipeDatabase = async () => {
-    if (confirm(lang === 'ar' ? 'تأكيد تصفير ومسح قاعدة البيانات تماماً من ذاكرة الهاتف الحالية؟' : 'CRITICAL ACTION: This wipes all trades, banks, and merchants local footprints. Proceed?')) {
+    if (confirm(lang === 'ar' ? 'تأكيد تصفير ومسح قاعدة البيانات تماماً من ذاكرة الهاتف الحالية؟' : 'CRITICAL ACTION: This wipes all trades, banks, config and merchants local footprints. Proceed?')) {
       await dbWipeAllData();
       setTrades([]);
       setBanks([]);
       setMerchants([]);
-      alert(lang === 'ar' ? 'تم مسح ذاكرة النظام!' : 'Local ecosystem storage securely wiped.');
+      setSysConfig({ id: 'global', base_capital: 0, target_daily_goal: 100 });
+      alert(lang === 'ar' ? 'تم تصفير النظام بالكامل وبداية من الصفر!' : 'Local ecosystem storage cleanly wiped to absolute zero state.');
     }
   };
 
-  // Live Computational Aggregate Metrics Pipelines
-  const completedTrades = trades.filter(x => x.status === 'Completed');
-  const totalRealizedProfit = completedTrades.reduce((sum, curr) => sum + curr.net_profit_usd, 0);
-  const totalSystemFrictionFees = trades.reduce((sum, curr) => sum + curr.buy_fee + curr.sell_fee, 0);
-  const lockedEscrowAssets = trades.filter(x => x.status === 'Pending').reduce((sum, curr) => sum + (curr.buy_amount * curr.buy_price), 0);
-  const totalVolumeMassHandled = trades.reduce((sum, curr) => sum + (curr.buy_amount * curr.buy_price), 0);
-  const averageSpreadCapturedPct = completedTrades.length > 0 ? (completedTrades.reduce((sum, curr) => sum + curr.roi, 0) / completedTrades.length) : 0;
+  // --- COMPILER-SAFE LOGIC PIPELINE MEMO METRICS ---
+  const completedTrades = useMemo(() => trades.filter(x => x.status === 'Completed'), [trades]);
+  
+  const metrics = useMemo(() => {
+    const profitSum = completedTrades.reduce((sum, curr) => sum + curr.net_profit_usd, 0);
+    const feesSum = trades.reduce((sum, curr) => sum + curr.buy_fee + curr.sell_fee, 0);
+    const escrowSum = trades.filter(x => x.status === 'Pending').reduce((sum, curr) => sum + (curr.buy_amount * curr.buy_price), 0);
+    const totalVolMass = trades.reduce((sum, curr) => sum + (curr.buy_amount * curr.buy_price), 0);
+    const avgSpread = completedTrades.length > 0 ? (completedTrades.reduce((sum, curr) => sum + curr.roi, 0) / completedTrades.length) : 0;
+    
+    return { profitSum, feesSum, escrowSum, totalVolMass, avgSpread };
+  }, [trades, completedTrades]);
 
-  // Arbitrage Core Matrix Mathematical Algorithms
+  // Arbitrage Lab Matrix Mathematical Calculations
   const totalAquisitionOutflow = (arbVol * arbBuyPrice) + arbHopFee;
   const totalLiquidationInflow = (arbVol * arbSellPrice) - arbHopFee;
   const liveAlphaProfitResult = totalLiquidationInflow - totalAquisitionOutflow;
   const liveAlphaSpreadPct = totalAquisitionOutflow > 0 ? (liveAlphaProfitResult / totalAquisitionOutflow) * 100 : 0;
   const liveEcosystemBreakEven = arbBuyPrice + (arbHopFee * 2 / arbVol);
 
-  const processedLedgerFeed = trades.filter(item => {
-    const query = searchQuery.toLowerCase();
-    const searchMatch = item.merchant_name.toLowerCase().includes(query) ||
-                        item.buy_payment_method.toLowerCase().includes(query) ||
-                        item.sell_payment_method.toLowerCase().includes(query) ||
-                        item.asset.toLowerCase().includes(query) ||
-                        item.notes.toLowerCase().includes(query);
-    const statusMatch = statusFilter === 'ALL' || item.status === statusFilter;
-    return searchMatch && statusMatch;
-  }).sort((a, b) => {
-    if (sortOrder === 'PROFIT_DESC') return b.net_profit_usd - a.net_profit_usd;
-    if (sortOrder === 'ROI_DESC') return b.roi - a.roi;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); 
-  });
+  // Search Engine Optimization Sorting Filtration Engine
+  const processedLedgerFeed = useMemo(() => {
+    return trades.filter(item => {
+      const query = searchQuery.toLowerCase();
+      const searchMatch = item.merchant_name.toLowerCase().includes(query) ||
+                          item.buy_payment_method.toLowerCase().includes(query) ||
+                          item.sell_payment_method.toLowerCase().includes(query) ||
+                          item.asset.toLowerCase().includes(query) ||
+                          item.notes.toLowerCase().includes(query);
+      const statusMatch = statusFilter === 'ALL' || item.status === statusFilter;
+      return searchMatch && statusMatch;
+    }).sort((a, b) => {
+      if (sortOrder === 'PROFIT_DESC') return b.net_profit_usd - a.net_profit_usd;
+      if (sortOrder === 'ROI_DESC') return b.roi - a.roi;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); 
+    });
+  }, [trades, searchQuery, statusFilter, sortOrder]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-100 font-sans antialiased" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-100 font-sans antialiased select-none" dir={isRTL ? 'rtl' : 'ltr'}>
       
-      {/* SLEEK ULTRA-MINIMALIST FINTECH LOGO HEADER BAR */}
+      {/* ULTRA-MINIMALIST FINTECH DESIGN BRAND HEADER BAR */}
       <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-zinc-950 border-b border-zinc-900/60 backdrop-blur-xl">
-        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+        <div className="flex items-center space-x-1.5 src-rail rtl:space-x-reverse">
           <div className="w-5 h-5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
@@ -492,47 +554,47 @@ export default function MobileCoreApp() {
         </div>
       </header>
 
-      {/* COMPACT MOBILE CORE SLIDER SCREEN WRAPPERS */}
+      {/* COMPACT NATIVE-FEEL SCROLL PORT VIEWPORT BOXES */}
       <main className="flex-1 p-4 space-y-4 overflow-y-auto pb-24">
         
-        {/* VIEW 1: DASHBOARD COMMAND CENTER OVERVIEW */}
+        {/* VIEW 1: ADVANCED COMMAND CENTER (DASHBOARD) */}
         {activeTab === 'dash' && (
           <div className="space-y-4 animate-fade-in">
-            {/* Consolidated Pool Valuation Enclave Asset Card */}
+            {/* Real Liquid Capital Pool Evaluation Card */}
             <div className="p-6 rounded-3xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-zinc-800/80 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-44 h-44 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full filter blur-3xl" />
               <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block">{t.total_portfolio}</span>
-              <span className="text-4xl font-black mt-1 bg-gradient-to-r from-zinc-100 via-zinc-300 to-zinc-400 bg-clip-text text-transparent tracking-tight block">
-                ${(45000 + totalRealizedProfit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <span className="text-4xl font-black mt-1 bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-400 bg-clip-text text-transparent tracking-tight block">
+                ${(sysConfig.base_capital + metrics.profitSum).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <div className="mt-4 flex items-center border-t border-zinc-900 pt-4">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-xl font-black">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  <span>+${totalRealizedProfit.toLocaleString(undefined, { maximumFractionDigits: 2 })} COMPREHENSIVE REVENUE DISPATCH</span>
+                  <span>+${metrics.profitSum.toLocaleString(undefined, { maximumFractionDigits: 2 })} USER REALIZED SPREAD</span>
                 </div>
               </div>
             </div>
 
-            {/* Core Statistics Quad Matrix Block Grid */}
+            {/* Extended Advanced Analytics Dashboard Quad Array Grid */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
                 <span className="text-[10px] text-zinc-500 font-bold uppercase block">{t.today_profit}</span>
-                <span className="text-xl font-black text-emerald-400 mt-1 block">+${totalRealizedProfit.toFixed(2)}</span>
+                <span className="text-xl font-black text-emerald-400 mt-1 block">+${metrics.profitSum.toFixed(2)}</span>
                 <div className="w-1 h-8 bg-emerald-500 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
                 <span className="text-[10px] text-zinc-500 font-bold uppercase block">{t.pending_capital}</span>
-                <span className="text-xl font-black text-amber-500 mt-1 block">${lockedEscrowAssets.toFixed(2)}</span>
+                <span className="text-xl font-black text-amber-500 mt-1 block">${metrics.escrowSum.toFixed(2)}</span>
                 <div className="w-1 h-8 bg-amber-500 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
                 <span className="text-[10px] text-zinc-500 font-bold uppercase block">Avg Captured Spread</span>
-                <span className="text-xl font-black text-teal-400 mt-1 block">{averageSpreadCapturedPct.toFixed(2)}%</span>
+                <span className="text-xl font-black text-teal-400 mt-1 block">{metrics.avgSpread.toFixed(2)}%</span>
                 <div className="w-1 h-8 bg-teal-500 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md relative overflow-hidden">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase block">Total Mass Volume</span>
-                <span className="text-xl font-black text-zinc-100 mt-1 block">${totalVolumeMassHandled.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase block">Total Volume Mass</span>
+                <span className="text-xl font-black text-zinc-100 mt-1 block">${metrics.totalVolMass.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 <div className="w-1 h-8 bg-zinc-400 absolute top-4 left-0 ltr:left-0 rtl:right-0" />
               </div>
             </div>
@@ -562,23 +624,27 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* DYNAMIC LIQUIDITY RAIL GATEWAY MANAGERS ARRAY */}
+            {/* REAL-TIME DYNAMIC LIQUIDITY BANK NODE RAIL MANAGERS PANEL */}
             <div className="p-4 rounded-3xl bg-zinc-900/40 border border-zinc-900 space-y-4">
               <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-zinc-500" /> {t.bank_nodes}
               </h3>
               <div className="space-y-2.5">
-                {banks.map((bank) => (
-                  <div key={bank.id} onClick={() => setSelectedBankId(bank.id)} className={`p-3 bg-zinc-950 border rounded-2xl transition-all cursor-pointer flex items-center justify-between ${selectedBankId === bank.id ? 'border-emerald-500 bg-zinc-900/40' : 'border-zinc-900'}`}>
-                    <div>
-                      <span className="text-xs font-bold text-zinc-200 block">{bank.name}</span>
-                      <span className="text-[10px] text-zinc-500 uppercase mt-0.5 block font-mono">Friction base estimate: {bank.estimated_fee_pct}%</span>
+                {banks.length === 0 ? (
+                  <div className="text-center py-4 text-xs text-zinc-600 border border-dashed border-zinc-900 rounded-xl">No active liquidity rails initialized inside settings.</div>
+                ) : (
+                  banks.map((bank) => (
+                    <div key={bank.id} onClick={() => setSelectedBankId(bank.id)} className={`p-3 bg-zinc-950 border rounded-2xl transition-all cursor-pointer flex items-center justify-between ${selectedBankId === bank.id ? 'border-emerald-500 bg-zinc-900/40' : 'border-zinc-900'}`}>
+                      <div>
+                        <span className="text-xs font-bold text-zinc-200 block">{bank.name}</span>
+                        <span className="text-[10px] text-zinc-500 uppercase mt-0.5 block font-mono">Friction estimate: {bank.estimated_fee_pct}%</span>
+                      </div>
+                      <span className="font-mono text-xs font-bold bg-zinc-900 p-2 rounded-xl border border-zinc-800 text-zinc-100">
+                        {bank.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })} {bank.currency}
+                      </span>
                     </div>
-                    <span className="font-mono text-xs font-bold bg-zinc-900 p-2 rounded-xl border border-zinc-800 text-zinc-100">
-                      {bank.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })} {bank.currency}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {selectedBankId && (
@@ -593,14 +659,14 @@ export default function MobileCoreApp() {
                       className="flex-1 h-10 px-3 bg-zinc-900 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono outline-none"
                     />
                     <button type="button" onClick={handleAdjustBankBalance} className="h-10 px-4 bg-emerald-500 text-zinc-950 text-xs font-bold rounded-xl active:scale-95 transition-transform">
-                      Rebalance Rail Pool
+                      Rebalance Pool
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* ARTIFICIAL PROCEDURAL INTELLIGENCE INSIGHT MODULE RENDERER */}
+            {/* ARTIFICIAL PROCEDURAL INTELLIGENCE ALGORITHMIC INSIGHT MODULE FEED */}
             <div className="p-4 rounded-3xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-zinc-800 shadow-xl space-y-3">
               <div className="flex items-center gap-2 text-xs font-black text-zinc-200 uppercase tracking-widest">
                 <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
@@ -609,18 +675,18 @@ export default function MobileCoreApp() {
               <div className="p-3 rounded-2xl bg-zinc-950/80 border border-zinc-900 space-y-2.5 text-xs text-zinc-400 leading-relaxed">
                 <div className="flex gap-2 items-start">
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5" />
-                  <p>Highest network yield capture path: Sourcing from <strong className="text-zinc-200">Wise (EUR)</strong> and executing payout via <strong className="text-zinc-200">Vodafone Cash (EGP)</strong> opens an alpha variance of <span className="text-emerald-400 font-bold">+4.35%</span>.</p>
+                  <p>Highest network yield capture path matching your current execution profile lines: Sourcing via <strong className="text-zinc-200">Wise (EUR)</strong> node and liquidating tokens to local cash systems offers maximum spread velocity extension.</p>
                 </div>
                 <div className="flex gap-2 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1.5" />
-                  <p>Counterparty Counter-Risk assessment: {merchants.filter(m => m.is_warning).length} flagged operators are logged in your local enclave security framework. Stay vigilant on escrow releases.</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0 mt-1.5" />
+                  <p>Risk parameter model monitoring: Total registered counterparty merchant directory logs show <strong className="text-zinc-200">{merchants.filter(m => m.is_warning).length} flagged vectors</strong>. Confirm fiat compliance releases properly.</p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* VIEW 2: ARBITRAGE SIMULATION LAB SUITE */}
+        {/* VIEW 2: ARBITRAGE SCANNER MULTI-HOP LAB */}
         {activeTab === 'arb' && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="text-base font-black text-zinc-100 flex items-center gap-2">
@@ -642,7 +708,7 @@ export default function MobileCoreApp() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wider font-black text-zinc-500">Combined Processing Friction Fees ($)</label>
+                <label className="text-[10px] uppercase tracking-wider font-black text-zinc-500">Combined Network Hop Friction Fees ($)</label>
                 <input type="number" value={arbHopFee} onChange={(e) => setArbHopFee(Number(e.target.value))} className="w-full h-12 px-3 mt-1 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 font-mono text-sm focus:border-emerald-500 outline-none" />
               </div>
             </div>
@@ -675,14 +741,14 @@ export default function MobileCoreApp() {
           </div>
         )}
 
-        {/* VIEW 3: GLOBAL UNRESTRICTED LEDGER HISTORY SYSTEM */}
+        {/* VIEW 3: LEDGER CHRONO HISTORY AND ENTRY SUITE */}
         {activeTab === 'trades' && (
           <div className="space-y-4 animate-fade-in">
-            {/* Input Entry Portal Sheet */}
             <div className="p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800 space-y-4 shadow-xl">
               <h2 className="text-xs font-black text-zinc-300 flex items-center gap-2 uppercase tracking-widest">
                 <Coins className="w-4 h-4 text-emerald-400" /> {t.save_trade}
               </h2>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-zinc-500 font-bold uppercase">Asset Token</label>
@@ -694,9 +760,9 @@ export default function MobileCoreApp() {
                 </div>
               </div>
 
-              {/* SOURCING ENTRY PARAMS */}
+              {/* SOURCING INFRASTRUCTURE LAYERS */}
               <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-900 space-y-3">
-                <span className="text-[9px] font-black tracking-wider text-emerald-400 uppercase block">Asset Sourcing Engine Layer</span>
+                <span className="text-[9px] font-black tracking-wider text-emerald-400 uppercase block">Asset Sourcing Channels</span>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="text-[9px] text-zinc-600 block">Buy Unit Price</label>
@@ -707,14 +773,14 @@ export default function MobileCoreApp() {
                     <input type="text" value={buyCurrency} onChange={(e) => setBuyCurrency(e.target.value)} placeholder="EUR" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs font-bold uppercase outline-none" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-zinc-600 block">Exchange Host</label>
+                    <label className="text-[9px] text-zinc-600 block">Exchange Node</label>
                     <input type="text" value={buyPlatform} onChange={(e) => setBuyPlatform(e.target.value)} placeholder="Binance" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] text-zinc-600 block">Outflow Bank Channel</label>
-                    <input type="text" value={buyMethod} onChange={(e) => setBuyMethod(e.target.value)} placeholder="Wise Core Node" className="w-full h-9 px-3 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
+                    <label className="text-[9px] text-zinc-600 block">Outflow Bank Node</label>
+                    <input type="text" value={buyMethod} onChange={(e) => setBuyMethod(e.target.value)} placeholder="Wise, Revolut" className="w-full h-9 px-3 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
                   </div>
                   <div>
                     <label className="text-[9px] text-zinc-600 block">Sourcing Fee</label>
@@ -723,9 +789,9 @@ export default function MobileCoreApp() {
                 </div>
               </div>
 
-              {/* LIQUIDATION ENTRY PARAMS */}
+              {/* LIQUIDATION INFRASTRUCTURE LAYERS */}
               <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-900 space-y-3">
-                <span className="text-[9px] font-black tracking-wider text-amber-400 uppercase block">Asset Liquidation Engine Layer</span>
+                <span className="text-[9px] font-black tracking-wider text-amber-400 uppercase block">Asset Liquidation Channels</span>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="text-[9px] text-zinc-600 block">Sell Unit Price</label>
@@ -736,13 +802,13 @@ export default function MobileCoreApp() {
                     <input type="text" value={sellCurrency} onChange={(e) => setSellCurrency(e.target.value)} placeholder="EGP" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs font-bold uppercase outline-none" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-zinc-600 block">Liquid Target Exchange</label>
+                    <label className="text-[9px] text-zinc-600 block">Liquid Exchange</label>
                     <input type="text" value={sellPlatform} onChange={(e) => setSellPlatform(e.target.value)} placeholder="Bybit" className="w-full h-9 px-2 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] text-zinc-600 block">Inflow Bank Rail</label>
+                    <label className="text-[9px] text-zinc-600 block">Inflow Bank Node</label>
                     <input type="text" value={sellMethod} onChange={(e) => setSellMethod(e.target.value)} placeholder="Vodafone Cash" className="w-full h-9 px-3 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 text-xs outline-none" />
                   </div>
                   <div>
@@ -779,7 +845,7 @@ export default function MobileCoreApp() {
                 </div>
                 <div>
                   <label className="text-[10px] text-zinc-500 font-bold uppercase">Audit Reference Notes</label>
-                  <input type="text" value={userNotes} onChange={(e) => setUserNotes(e.target.value)} placeholder="Internal parameter logs" className="w-full h-11 px-3 mt-1 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                  <input type="text" value={userNotes} onChange={(e) => setUserNotes(e.target.value)} placeholder="Internal tracking tags" className="w-full h-11 px-3 mt-1 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                 </div>
               </div>
 
@@ -788,30 +854,30 @@ export default function MobileCoreApp() {
               </button>
             </div>
 
-            {/* INTEGRATED REGISTER MERCHANT HUB COMPONENT */}
+            {/* INTEGRATED DIRECTORY: COUNTERPARTY MERCHANT REGISTRATION HUB */}
             <div className="p-4 rounded-3xl bg-zinc-900/40 border border-zinc-900 space-y-3.5">
               <h3 className="text-xs font-black uppercase text-zinc-400 tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4 text-zinc-500" /> {t.merchants_hub}
               </h3>
               <div className="space-y-3">
-                <input type="text" placeholder="Counterparty Username Alias" value={mName} onChange={(e) => setMName(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                <input type="text" placeholder="Counterparty Username Identifier" value={mName} onChange={(e) => setMName(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder="Base Platform Host" value={mPlatform} onChange={(e) => setMPlatform(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                  <input type="text" placeholder="Base Platform Exchange" value={mPlatform} onChange={(e) => setMPlatform(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                   <input type="number" step="0.1" placeholder="Completion Rating %" value={mRating || ''} onChange={(e) => setMRating(Number(e.target.value))} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono outline-none" />
                 </div>
-                <input type="text" placeholder="Operator feedback parameters notes" value={mNotes} onChange={(e) => setMNotes(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                <input type="text" placeholder="Operational feedback reference parameters" value={mNotes} onChange={(e) => setMNotes(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                 <button type="button" onClick={handleRegisterMerchant} className="w-full h-11 bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold rounded-xl text-xs active:scale-95 transition-transform">
                   {t.add_merchant}
                 </button>
               </div>
 
-              {/* RENDER ACTIVE VERIFIED PRO/ flagged COUNTERPARTIES LIST */}
+              {/* RENDER COUNTERPARTIES RECORD ENCLAVES */}
               <div className="space-y-2 pt-2 border-t border-zinc-900">
                 {merchants.map((m) => (
                   <div key={m.id} className={`p-3 rounded-xl border flex items-center justify-between text-xs ${m.is_warning ? 'bg-red-950/10 border-red-900/40' : 'bg-zinc-950 border-zinc-900/60'}`}>
                     <div>
                       <span className="font-bold text-zinc-200 block">{m.name} <span className="text-[9px] text-zinc-600 font-mono">({m.platform})</span></span>
-                      <span className="text-[10px] text-zinc-500 mt-0.5 block font-mono">Success Metrics: {m.rating}% // {m.notes}</span>
+                      <span className="text-[10px] text-zinc-500 mt-0.5 block font-mono">Success Score: {m.rating}% // {m.notes}</span>
                     </div>
                     <div className="flex gap-1.5">
                       <button type="button" onClick={() => handleToggleMerchantFavorite(m)} className={`p-2 rounded-lg border transition-colors ${m.is_favorite ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
@@ -826,30 +892,30 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* DYNAMIC LEDGER LOOKUP PIPELINE QUERY TOOLS */}
+            {/* PIPELINE ADVANCED FILTERS LEDGER ENGINE */}
             <div className="space-y-3 pt-2">
               <div className="space-y-2">
                 <div className="bg-zinc-900 rounded-xl border border-zinc-800 flex items-center px-3 gap-2">
                   <Search className="w-4 h-4 text-zinc-500" />
-                  <input type="text" placeholder="Query tokens, merchant, bank rail channels..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-11 bg-transparent text-xs text-zinc-100 outline-none" />
+                  <input type="text" placeholder="Query custom asset token, merchant ID, bank rails..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-11 bg-transparent text-xs text-zinc-100 outline-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs rounded-xl px-2 outline-none font-bold">
-                    <option value="ALL">ALL LEDGER STATES</option>
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs rounded-xl px-2 outline-none font-bold">
+                    <option value="ALL">ALL GENERAL STATES</option>
                     <option value="Completed">Completed</option>
                     <option value="Pending">Pending</option>
                     <option value="Disputed">Disputed</option>
                     <option value="Cancelled">Cancelled</option>
                   </select>
-                  <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as any)} className="h-10 bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs rounded-xl px-2 outline-none font-bold">
+                  <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value as any)} className="h-10 bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs rounded-xl px-2 outline-none font-bold">
                     <option value="NEWEST">CHRONO NEWEST</option>
-                    <option value="PROFIT_DESC">MAX YIELD SPREAD</option>
-                    <option value="ROI_DESC">HIGHEST ROI VELOCITY</option>
+                    <option value="PROFIT_DESC">MAX NET PROFIT ALPHA</option>
+                    <option value="ROI_DESC">HIGHEST SPREAD ROI</option>
                   </select>
                 </div>
               </div>
 
-              {/* RENDER MASTER DATA RECURSIVE BLOCKS */}
+              {/* RENDER RECURSIVE TRANSACTION LEDGER FEED ROWS */}
               <div className="space-y-2.5">
                 {processedLedgerFeed.length === 0 ? (
                   <div className="text-center py-10 text-xs text-zinc-600 border border-dashed border-zinc-900 rounded-3xl">{t.filter_all} is empty.</div>
@@ -866,7 +932,7 @@ export default function MobileCoreApp() {
                             <span className="text-amber-400 font-extrabold">{item.sell_platform}</span>
                           </div>
                           <span className="text-[10px] text-zinc-500 block mt-1 font-mono">
-                            Counterparty: {item.merchant_name} // Route: {item.buy_payment_method} ➔ {item.sell_payment_method}
+                            Counterparty: {item.merchant_name} // Rail: {item.buy_payment_method} ➔ {item.sell_payment_method}
                           </span>
                         </div>
                         <div className="text-end">
@@ -898,31 +964,51 @@ export default function MobileCoreApp() {
           </div>
         )}
 
-        {/* VIEW 4: SYSTEM CORE ROOT & RESET ENCLAVES */}
+        {/* VIEW 4: SYSTEM CONFIGURATION FRAMEWORK & ROOT ENCLAVES */}
         {activeTab === 'settings' && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="text-base font-black text-zinc-100 flex items-center gap-2">
               <Settings className="w-4 h-4 text-emerald-400" /> {t.settings}
             </h2>
 
+            {/* CONFIGURE SEED EQUITY BASE ALLOCATION */}
+            <div className="p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800 space-y-3 shadow-xl">
+              <h3 className="text-xs font-black uppercase text-zinc-300 tracking-wider flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-emerald-400" /> {t.base_capital_config}
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[10px] text-zinc-500 font-bold uppercase block">Starting Capital Allocation Pool ($)</label>
+                  <input type="number" value={inputBaseCapital || ''} onChange={(e) => setInputBaseCapital(Number(e.target.value))} className="w-full h-11 px-3 mt-1 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-sm font-mono font-bold outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] text-zinc-500 font-bold uppercase block">{t.target_goal} ($)</label>
+                  <input type="number" value={inputDailyGoal || ''} onChange={(e) => setInputDailyGoal(Number(e.target.value))} className="w-full h-11 px-3 mt-1 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-sm font-mono outline-none" />
+                </div>
+                <button type="button" onClick={handleCommitConfig} className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 text-zinc-950 font-black rounded-xl text-xs active:scale-95 transition-all shadow-md">
+                  {t.save_config}
+                </button>
+              </div>
+            </div>
+
             {/* INITIALIZE BRAND NEW BANK CHANNEL LIQUIDITY NODE */}
             <div className="p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800 space-y-3 shadow-xl">
               <h3 className="text-xs font-black uppercase text-zinc-300 tracking-wider flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-emerald-400" /> {t.add_node}
+                <Building2 className="w-4 h-4 text-teal-400" /> {t.add_node}
               </h3>
               <div className="space-y-3">
-                <input type="text" placeholder="Bank Name ID (e.g. Wise Rail, BBVA Spain)" value={newBankName} onChange={(e) => setNewBankName(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
+                <input type="text" placeholder="Bank Name ID (e.g. Wise Rail, Vodafone Cash)" value={newBankName} onChange={(e) => setNewBankName(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
                 <div className="grid grid-cols-2 gap-3">
                   <input type="text" placeholder="Currency Ticker" value={newBankCurrency} onChange={(e) => setNewBankCurrency(e.target.value)} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs uppercase outline-none" />
                   <input type="number" placeholder="Opening Capital Pool" value={newBankBalance || ''} onChange={(e) => setNewBankBalance(Number(e.target.value))} className="w-full h-11 px-3 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono outline-none" />
                 </div>
-                <button type="button" onClick={handleAddBankNode} className="w-full h-11 bg-zinc-100 text-zinc-950 font-black rounded-xl text-xs active:scale-95 transition-all">
+                <button type="button" onClick={handleAddBankNode} className="w-full h-11 bg-zinc-800 border border-zinc-700 text-zinc-100 font-bold rounded-xl text-xs active:scale-95 transition-all">
                   Initialize Liquidity Gateway Node
                 </button>
               </div>
             </div>
 
-            {/* ENCRYPTED STATE IMAGE BACKUP MODULE */}
+            {/* MASTER SYSTEM JSON IMAGE BACKUPS */}
             <div className="p-4 rounded-3xl bg-zinc-900/50 border border-zinc-800 space-y-3 shadow-xl">
               <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                 <Receipt className="w-3.5 h-3.5 text-zinc-500" /> System State Backup Engine
@@ -948,15 +1034,18 @@ export default function MobileCoreApp() {
                       if (payload.merchants) {
                         for (const m of payload.merchants) await dbSaveMerchant(m);
                       }
-                      alert('Ecosystem dataset structures fully restored and populated into local disk!');
+                      if (payload.sysConfig) {
+                        await dbSaveConfig(payload.sysConfig);
+                      }
+                      alert('Ecosystem master dataset state successfully verified and mounted!');
                       refreshCoreDatasets();
-                    } catch (err) { alert('Invalid file fingerprint data structure signature.'); }
+                    } catch (err) { alert('Invalid file layout structural signature.'); }
                   }} />
                 </label>
               </div>
             </div>
 
-            {/* HARD ECOSYSTEM DISK RESET ENCLAVE */}
+            {/* HARD STORAGE HARD DISK RESET ENCLAVE */}
             <div className="p-4 rounded-3xl bg-red-950/10 border border-red-900/30 space-y-2">
               <h3 className="text-xs font-bold text-red-400 uppercase flex items-center gap-1.5"><ShieldAlert className="w-4 h-4 text-red-400" /> Hard Reset Modality</h3>
               <button type="button" onClick={handleWipeDatabase} className="w-full h-11 bg-red-500/10 text-red-400 border border-red-500/20 font-bold rounded-xl text-xs flex items-center justify-center gap-2">
@@ -973,7 +1062,7 @@ export default function MobileCoreApp() {
 
       </main>
 
-      {/* ERGONOMIC NATIVE MOBILE GESTURE- ملائمة BOTTOM HORIZON NAVBAR */}
+      {/* ERGONOMIC NATIVE MOBILE HORIZON NAVIGATION BOTTOM NAVBAR */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 border-t border-zinc-900/80 backdrop-blur-xl px-2 pb-safe shadow-[0_-10px_35px_rgba(0,0,0,0.9)]">
         <div className="flex justify-around items-center h-16">
           {[
