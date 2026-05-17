@@ -16,7 +16,6 @@ import {
   Wallet,
   ArrowUpDown,
   Search,
-  Filter,
   Trash2,
   ShieldAlert,
   Coins,
@@ -53,7 +52,9 @@ const DB_VERSION = 2;
 
 const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return reject(new Error('IndexedDB unavailable during server build state'));
+    }
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = (e: any) => {
       const db = e.target.result;
@@ -62,48 +63,59 @@ const initDB = (): Promise<IDBDatabase> => {
       }
     };
     request.onsuccess = (e: any) => resolve(e.target.result);
-    request.onerror = (e: any) => reject(e.target.error);
+    request.onerror = (e: any) => reject(request.error);
   });
 };
 
 const dbSaveTrade = async (trade: Trade): Promise<void> => {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(['trades'], 'readwrite');
-    const store = tx.objectStore('trades');
-    
-    // Auto Financial Calculus Pipeline
-    const totalCost = (trade.buy_amount * trade.buy_price) + trade.buy_fee;
-    const totalRevenue = (trade.buy_amount * trade.sell_price) - trade.sell_fee;
-    trade.net_profit = totalRevenue - totalCost;
-    trade.roi = totalCost > 0 ? (trade.net_profit / totalCost) * 100 : 0;
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['trades'], 'readwrite');
+      const store = tx.objectStore('trades');
+      
+      const totalCost = (trade.buy_amount * trade.buy_price) + trade.buy_fee;
+      const totalRevenue = (trade.buy_amount * trade.sell_price) - trade.sell_fee;
+      trade.net_profit = totalRevenue - totalCost;
+      trade.roi = totalCost > 0 ? (trade.net_profit / totalCost) * 100 : 0;
 
-    const req = store.put(trade);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
+      const req = store.put(trade);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const dbGetTrades = async (): Promise<Trade[]> => {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(['trades'], 'readonly');
-    const store = tx.objectStore('trades');
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['trades'], 'readonly');
+      const store = tx.objectStore('trades');
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    return [];
+  }
 };
 
 const dbDeleteAllTrades = async (): Promise<void> => {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(['trades'], 'readwrite');
-    const store = tx.objectStore('trades');
-    const req = store.clear();
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['trades'], 'readwrite');
+      const store = tx.objectStore('trades');
+      const req = store.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 // ==========================================
@@ -156,11 +168,9 @@ export default function MobileCoreApp() {
   const [activeTab, setActiveTab] = useState<'dash' | 'arb' | 'trades' | 'settings'>('dash');
   const [trades, setTrades] = useState<Trade[]>([]);
   
-  // Ledger Search Pipeline State
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-  // Extended Advanced Form States
   const [assetType, setAssetType] = useState<Trade['asset']>('USDT');
   const [buyAmount, setBuyAmount] = useState<number>(1000);
   const [buyPrice, setBuyPrice] = useState<number>(0.92);
@@ -177,11 +187,10 @@ export default function MobileCoreApp() {
   const [tradeStatus, setTradeStatus] = useState<Trade['status']>('Completed');
   const [userNotes, setUserNotes] = useState<string>('');
 
-  // Interactive Live Advanced Arbitrage Simulator State
   const [arbVol, setArbVol] = useState<number>(2500);
   const [arbBuyPrice, setArbBuyPrice] = useState<number>(0.915);
   const [arbSellPrice, setArbSellPrice] = useState<number>(0.948);
-  const [arbPlatformFee, setArbPlatformFee] = useState<number>(2); // Fixed fiat transfer fee estimation
+  const [arbPlatformFee, setArbPlatformFee] = useState<number>(2);
 
   const t = translations[lang];
   const isRTL = lang === 'ar';
@@ -215,9 +224,8 @@ export default function MobileCoreApp() {
     };
     
     await dbSaveTrade(freshTrade);
-    alert(lang === 'ar' ? 'تمت معالجة الصفقة وتحديث المحفظة بأمان!' : 'Trade successfully executed and localized inside local database memory!');
+    alert(lang === 'ar' ? 'تمت معالجة الصفقة وتحديث المحفظة بأمان!' : 'Trade successfully executed and written to device memory!');
     
-    // Clear inputs for next high-velocity trade entry
     setMerchantName('');
     setUserNotes('');
     dbGetTrades().then(setTrades);
@@ -239,20 +247,17 @@ export default function MobileCoreApp() {
     dlAnchor.click();
   };
 
-  // Live Metric Aggregation Pipeline Calculations
   const completedTrades = trades.filter(x => x.status === 'Completed');
   const totalRealizedProfit = completedTrades.reduce((sum, current) => sum + current.net_profit, 0);
   const totalFeesPaid = trades.reduce((sum, current) => sum + current.buy_fee + current.sell_fee, 0);
   const lockedEscrowCapital = trades.filter(x => x.status === 'Pending').reduce((sum, current) => sum + (current.buy_amount * current.buy_price), 0);
   
-  // Realtime Advanced Arbitrage Matrix calculations
   const totalSimulatedCost = (arbVol * arbBuyPrice) + arbPlatformFee;
   const totalSimulatedRevenue = (arbVol * arbSellPrice) - arbPlatformFee;
   const liveArbNetProfit = totalSimulatedRevenue - totalSimulatedCost;
   const liveArbSpread = totalSimulatedCost > 0 ? (liveArbNetProfit / totalSimulatedCost) * 100 : 0;
   const liveBreakEvenPoint = arbSellPrice - (arbPlatformFee * 2 / arbVol);
 
-  // Search filter matching implementation
   const filteredTrades = trades.filter(trade => {
     const matchesSearch = trade.merchant_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           trade.buy_payment_method.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,7 +294,6 @@ export default function MobileCoreApp() {
         {/* VIEW 1: PREMIUM PERFORMANCE DASHBOARD */}
         {activeTab === 'dash' && (
           <div className="space-y-4 animate-fade-in">
-            {/* Glassmorphism Capital Card */}
             <div className="p-5 rounded-3xl bg-gradient-to-b from-zinc-900 to-zinc-950 border border-zinc-800/70 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-emerald-500/10 to-teal-500/0 rounded-full filter blur-2xl" />
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">{t.total_portfolio}</span>
@@ -305,7 +309,6 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* Tri-Grid Micro Analytics Panels */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-4 rounded-2xl bg-zinc-900/30 border border-zinc-800/60 backdrop-blur-md">
                 <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">{t.today_profit}</span>
@@ -333,7 +336,6 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* Premium Pipeline Tracker */}
             <div className="p-4 rounded-2xl bg-zinc-900/20 border border-zinc-900">
               <h3 className="text-xs font-bold text-zinc-400 mb-3 uppercase tracking-wider flex items-center gap-2">
                 <Building2 className="w-3.5 h-3.5 text-zinc-500" /> {t.liquidity}
@@ -358,7 +360,6 @@ export default function MobileCoreApp() {
               </div>
             </div>
             
-            {/* Realtime Trend Velocity Chart (Pure CSS Native Array) */}
             <div className="p-4 rounded-2xl bg-zinc-900/20 border border-zinc-900 text-center py-6">
               <div className="h-16 flex items-end justify-between gap-1.5 px-2">
                 {[30, 45, 35, 60, 50, 75, 65, 90, 85, 100].map((heightVal, i) => (
@@ -425,7 +426,6 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* Dynamic Arbitrage Evaluation Interface Card */}
             {liveArbNetProfit > 0 ? (
               <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-3 shadow-md">
                 <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
@@ -460,7 +460,6 @@ export default function MobileCoreApp() {
         {/* VIEW 3: LEDGER AND TRANSACTION PIPELINE */}
         {activeTab === 'trades' && (
           <div className="space-y-4 animate-fade-in">
-            {/* Entry Module Switch Trigger */}
             <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-4">
               <h2 className="text-sm font-black text-zinc-200 flex items-center gap-2">
                 <Coins className="w-4 h-4 text-emerald-400" /> {t.save_trade}
@@ -470,6 +469,7 @@ export default function MobileCoreApp() {
                 {(['USDT', 'BTC', 'EUR'] as const).map((ast) => (
                   <button 
                     key={ast} 
+                    type="button"
                     onClick={() => setAssetType(ast as any)}
                     className={`py-2 text-xs font-bold rounded-xl transition-all ${assetType === ast ? 'bg-emerald-500 text-zinc-950' : 'bg-zinc-950 border border-zinc-800 text-zinc-400'}`}
                   >
@@ -552,12 +552,11 @@ export default function MobileCoreApp() {
                 <input type="text" value={userNotes} onChange={(e) => setUserNotes(e.target.value)} placeholder="Order numbers or execution parameters" className="w-full h-11 px-3 mt-1 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs outline-none" />
               </div>
 
-              <button onClick={handleCreateTrade} className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl font-bold text-zinc-950 shadow-xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
+              <button type="button" onClick={handleCreateTrade} className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl font-bold text-zinc-950 shadow-xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4 text-zinc-950" /> {t.save_trade}
               </button>
             </div>
 
-            {/* SEARCH AND FILTER WORKSPACE PIPELINE */}
             <div className="space-y-3">
               <div className="flex gap-2">
                 <div className="flex-1 bg-zinc-900 rounded-xl border border-zinc-800 flex items-center px-3 gap-2">
@@ -582,7 +581,6 @@ export default function MobileCoreApp() {
                 </select>
               </div>
 
-              {/* LOCAL FEED RECORDS OUTPUT */}
               <div className="space-y-2">
                 {filteredTrades.length === 0 ? (
                   <div className="text-center py-8 text-xs text-zinc-600 border border-dashed border-zinc-900 rounded-2xl">No transactional ledger records match active query filters.</div>
@@ -633,6 +631,7 @@ export default function MobileCoreApp() {
               </p>
               
               <button 
+                type="button"
                 onClick={handleBackupExport} 
                 className="w-full h-12 border border-zinc-800 bg-zinc-950 rounded-xl font-bold text-zinc-200 text-xs flex items-center justify-center gap-2 active:bg-zinc-900 transition-colors"
               >
@@ -666,13 +665,13 @@ export default function MobileCoreApp() {
               </div>
             </div>
 
-            {/* CRITICAL MASTER WIPE ENCLAVE */}
             <div className="p-4 rounded-2xl bg-red-950/10 border border-red-900/30 space-y-2">
               <h3 className="text-xs font-bold text-red-400 uppercase flex items-center gap-1.5">
                 <ShieldAlert className="w-4 h-4 text-red-400" /> Factory System Reset
               </h3>
               <p className="text-[10px] text-zinc-500 leading-normal">Purges your system database entries entirely from the local Chrome/Firefox profile cache. Ensure you have exported a valid backup configuration file beforehand.</p>
               <button 
+                type="button"
                 onClick={handleWipeDatabase}
                 className="w-full h-11 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold rounded-xl text-xs transition-colors mt-1 flex items-center justify-center gap-2"
               >
@@ -703,10 +702,11 @@ export default function MobileCoreApp() {
             return (
               <button 
                 key={navTab.id} 
+                type="button"
                 onClick={() => setActiveTab(navTab.id as any)} 
                 className="flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-95 touch-manipulation relative h-full"
               >
-                <IconComponent className={`w-4.5 h-4.5 transition-all duration-200 ${isTabActive ? 'text-emerald-400 scale-110 drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]' : 'text-zinc-600'}`} />
+                <IconComponent className={`w-5 h-5 transition-all duration-200 ${isTabActive ? 'text-emerald-400 scale-110 drop-shadow-[0_0_12px_rgba(16,185,129,0.6)]' : 'text-zinc-600'}`} />
                 <span className={`text-[10px] mt-1 transition-all duration-150 tracking-tight ${isTabActive ? 'text-zinc-100 font-black' : 'text-zinc-500'}`}>
                   {navTab.label}
                 </span>
