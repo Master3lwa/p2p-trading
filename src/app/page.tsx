@@ -121,7 +121,19 @@ const dbDeleteAllTrades = async (): Promise<void> => {
 // ==========================================
 // 2. COMPREHENSIVE MULTILINGUAL ENGINE
 // ==========================================
-const translations: Record<string, Record<string, string>> = {
+interface TranslationSchema {
+  dashboard: string; arbitrage: string; trades: string; settings: string;
+  total_portfolio: string; today_profit: string; efficiency: string;
+  liquidity: string; buy_p: string; sell_p: string; entry_p: string;
+  exit_p: string; volume: string; net_spread: string;
+  profitable: string; unprofitable: string; save_trade: string;
+  amount: string; notes: string; status: string; platform: string;
+  export_db: string; import_db: string; secure_note: string;
+  fees: string; active_merchants: string; filter_all: string;
+  pending_capital: string; break_even: string; risk_level: string;
+}
+
+const translations: Record<'en' | 'ar' | 'es', TranslationSchema> = {
   en: {
     dashboard: "Dashboard", arbitrage: "Arbitrage", trades: "Ledger Engine", settings: "Settings",
     total_portfolio: "Net Capital Balance", today_profit: "Realized Net Profit", efficiency: "Success Velocity",
